@@ -21,130 +21,130 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
  */
 public class FlutterJailMonkeyPlugin implements MethodCallHandler {
 
-  private final Registrar registrar;
+    private final Registrar registrar;
 
-  private FlutterJailMonkeyPlugin(Registrar registrar) {
-    this.registrar = registrar;
-  }
-
-  /**
-   * Plugin registration.
-   */
-  public static void registerWith(Registrar registrar) {
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_jail_monkey");
-    channel.setMethodCallHandler(new FlutterJailMonkeyPlugin(registrar));
-  }
-
-  @Override
-  public void onMethodCall(MethodCall call, Result result) {
-    switch (call.method) {
-      case "isJailBroken":
-        result.success(isJailBroken());
-        break;
-      case "canMockLocation":
-        result.success(isMockLocationOn(registrar.context()));
-        break;
-      case "isOnExternalStorage":
-        result.success(isOnExternalStorage(registrar.context()));
-        break;
-      default:
-        result.notImplemented();
-        break;
-    }
-  }
-
-  private boolean isSuperuserPresent() {
-    // Check if /system/app/Superuser.apk is present
-    String[] paths = {
-            "/system/app/Superuser.apk",
-            "/sbin/su",
-            "/system/bin/su",
-            "/system/xbin/su",
-            "/data/local/xbin/su",
-            "/data/local/bin/su",
-            "/system/sd/xbin/su",
-            "/system/bin/failsafe/su",
-            "/data/local/su"
-    };
-
-    for (String path : paths) {
-      if (new File(path).exists()) {
-        return true;
-      }
+    private FlutterJailMonkeyPlugin(Registrar registrar) {
+        this.registrar = registrar;
     }
 
-    return false;
-  }
-
-  /**
-   * Checks if the device is rooted.
-   *
-   * @return <code>true</code> if the device is rooted, <code>false</code> otherwise.
-   */
-  private boolean isJailBroken() {
-    if (android.os.Build.VERSION.SDK_INT >= 23) {
-      return checkRootMethod1() || checkRootMethod2();
-    } else {
-      return isSuperuserPresent() || canExecuteCommand();
-    }
-  }
-
-  private static boolean checkRootMethod1() {
-    String[] paths = {"/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
-            "/system/bin/failsafe/su", "/data/local/su"};
-    for (String path : paths) {
-      if (new File(path).exists()) return true;
-    }
-    return false;
-  }
-
-  private static boolean checkRootMethod2() {
-    Process process = null;
-    try {
-      process = Runtime.getRuntime().exec(new String[]{"/system/xbin/which", "su"});
-      BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      return in.readLine() != null;
-    } catch (Throwable t) {
-      return false;
-    } finally {
-      if (process != null) process.destroy();
-    }
-  }
-
-  // executes a command on the system
-  private static boolean canExecuteCommand() {
-    boolean executeResult;
-    try {
-      Process process = Runtime.getRuntime().exec("/system/xbin/which su");
-      executeResult = process.waitFor() == 0;
-    } catch (Exception e) {
-      executeResult = false;
+    /**
+     * Plugin registration.
+     */
+    public static void registerWith(Registrar registrar) {
+        final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_jail_monkey");
+        channel.setMethodCallHandler(new FlutterJailMonkeyPlugin(registrar));
     }
 
-    return executeResult;
-  }
-
-  //returns true if mock location enabled, false if not enabled.
-  private boolean isMockLocationOn(Context context) {
-    return !Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
-  }
-
-  /**
-   * Checks if the application is installed on the SD card.
-   *
-   * @return <code>true</code> if the application is installed on the sd card
-   */
-  private boolean isOnExternalStorage(Context context) {
-    PackageManager pm = context.getPackageManager();
-    try {
-      PackageInfo pi = pm.getPackageInfo(context.getPackageName(), 0);
-      ApplicationInfo ai = pi.applicationInfo;
-      return (ai.flags & ApplicationInfo.FLAG_EXTERNAL_STORAGE) == ApplicationInfo.FLAG_EXTERNAL_STORAGE;
-    } catch (PackageManager.NameNotFoundException e) {
-      // ignore
+    @Override
+    public void onMethodCall(MethodCall call, Result result) {
+        switch (call.method) {
+            case "isJailBroken":
+                result.success(isJailBroken());
+                break;
+            case "canMockLocation":
+                result.success(isMockLocationOn(registrar.context()));
+                break;
+            case "isOnExternalStorage":
+                result.success(isOnExternalStorage(registrar.context()));
+                break;
+            default:
+                result.notImplemented();
+                break;
+        }
     }
 
+    private boolean isSuperuserPresent() {
+        // Check if /system/app/Superuser.apk is present
+        String[] paths = {
+                "/system/app/Superuser.apk",
+                "/sbin/su",
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/data/local/xbin/su",
+                "/data/local/bin/su",
+                "/system/sd/xbin/su",
+                "/system/bin/failsafe/su",
+                "/data/local/su"
+        };
 
-    return false;
-  }
+        for (String path : paths) {
+            if (new File(path).exists()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the device is rooted.
+     *
+     * @return <code>true</code> if the device is rooted, <code>false</code> otherwise.
+     */
+    private boolean isJailBroken() {
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            return checkRootMethod1() || checkRootMethod2();
+        } else {
+            return isSuperuserPresent() || canExecuteCommand();
+        }
+    }
+
+    private static boolean checkRootMethod1() {
+        String[] paths = {"/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
+                "/system/bin/failsafe/su", "/data/local/su"};
+        for (String path : paths) {
+            if (new File(path).exists()) return true;
+        }
+        return false;
+    }
+
+    private static boolean checkRootMethod2() {
+        Process process = null;
+        try {
+            process = Runtime.getRuntime().exec(new String[]{"/system/xbin/which", "su"});
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            return in.readLine() != null;
+        } catch (Throwable t) {
+            return false;
+        } finally {
+            if (process != null) process.destroy();
+        }
+    }
+
+    // executes a command on the system
+    private static boolean canExecuteCommand() {
+        boolean executeResult;
+        try {
+            Process process = Runtime.getRuntime().exec("/system/xbin/which su");
+            executeResult = process.waitFor() == 0;
+        } catch (Exception e) {
+            executeResult = false;
+        }
+
+        return executeResult;
+    }
+
+    //returns true if mock location enabled, false if not enabled.
+    private boolean isMockLocationOn(Context context) {
+        return !Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
+    }
+
+    /**
+     * Checks if the application is installed on the SD card.
+     *
+     * @return <code>true</code> if the application is installed on the sd card
+     */
+    private boolean isOnExternalStorage(Context context) {
+        PackageManager pm = context.getPackageManager();
+        try {
+            PackageInfo pi = pm.getPackageInfo(context.getPackageName(), 0);
+            ApplicationInfo ai = pi.applicationInfo;
+            return (ai.flags & ApplicationInfo.FLAG_EXTERNAL_STORAGE) == ApplicationInfo.FLAG_EXTERNAL_STORAGE;
+        } catch (PackageManager.NameNotFoundException e) {
+            // ignore
+        }
+
+
+        return false;
+    }
 }
